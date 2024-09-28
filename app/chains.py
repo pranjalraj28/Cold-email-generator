@@ -38,17 +38,21 @@ class Chain:
             ### JOB DESCRIPTION:
             {job_description}
 
-            ### INSTRUCTION:
-            You are the candidate looking to apply for the job which description which we just extracted.The candidate has uploaded his/her resume as well for better related content.
-            Your job is to write a cold email to the the hiring manager convincing him/her about your expertise and why you deserve an onterview opportunity.
-            
-            Also reference this user's resume to showcase their experience, projects and achievmnets: {resume_text}
-            Be careful to make the email as relevant as you can so that the email looks well targetted. for this, you can take reference from the job details and the user's resume. 
-            Be concise, only include 3-4 paragraphs aiming at job which includes candidates experience and projects and achievmnets in a professional way.
-            Remember you are a candidate applying to this job. 
-            Do not provide a preamble.
-            ### EMAIL (NO PREAMBLE):
+            ### CANDIDATE'S RESUME:
+            {resume_text}
 
+            ### INSTRUCTION:
+            You are the candidate applying for the above job. Write a professional cold email to the hiring manager, convincing them to offer you an interview opportunity. 
+            The email should:
+            - Be concise, professional, and to the point (3-4 paragraphs max).
+            - Focus on the skills required for the job and emphasize the candidate's matching skills from their resume.
+            - Highlight relevant projects, experience, and achievements from the resume that align with the job description.
+            - Reference specific requirements from the job description, such as experience level or key skills, and show how the candidate fulfills them.
+            - Avoid unnecessary preambles and get straight to the point.
+
+            Ensure that the email blends the candidate's skills and experience with the job's requirements effectively, showing why they are a strong fit.
+
+            ### EMAIL (NO PREAMBLE):
             """
         )
         chain_email = prompt_email | self.llm
