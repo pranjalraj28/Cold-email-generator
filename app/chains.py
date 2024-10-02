@@ -18,9 +18,8 @@ class Chain:
             {page_data}
             ### INSTRUCTION:
             The scraped text is from the career's page of a website.
-            Your job is to extract the job postings and return them in JSON format containing the following keys: `role`, `experience`, `skills` and `description`.
-            Only return the valid JSON.
-            ### VALID JSON (NO PREAMBLE):
+            Your job is to extract the job postings and return them in JSON format containing the following keys: `role`, `experience`, `skills`, `description`, and `job_id` (if available).
+            Only return one valid JSON job object, selecting the best match.
             """
         )
         chain_extract = prompt_extract | self.llm
@@ -30,7 +29,7 @@ class Chain:
             res = json_parser.parse(res.content)
         except OutputParserException:
             raise OutputParserException("Context too big. Unable to parse jobs.")
-        return res if isinstance(res, list) else [res]
+        return res if isinstance(res, dict) else res[0]  # Return only one job
 
     def write_mail(self, job, resume_text):
         prompt_email = PromptTemplate.from_template(
@@ -50,11 +49,37 @@ class Chain:
             - Reference specific requirements from the job description, such as experience level or key skills, and show how the candidate fulfills them.
             - Avoid unnecessary preambles and get straight to the point.
 
-            Ensure that the email blends the candidate's skills and experience with the job's requirements effectively, showing why they are a strong fit.
-
             ### EMAIL (NO PREAMBLE):
             """
         )
         chain_email = prompt_email | self.llm
         res = chain_email.invoke({"job_description": str(job), "resume_text": resume_text})
+        return res.content
+
+    def write_referral_message(self, job, resume_text, name=""):
+        prompt_referral = PromptTemplate.from_template(
+            """
+            ### JOB DESCRIPTION:
+            {job_description}
+
+            ### CANDIDATE'S RESUME:
+            {resume_text}
+
+            ### INSTRUCTION:
+            You are a candidate seeking a referral from an existing employee for the job mentioned above. Write a professional and concise message asking for a referral for the specific job role, incorporating the following:
+            - Start by clearly stating that you are interested in the job role and mention the job ID (if available).
+            - Briefly introduce your key skills that match the job requirements (1-2 sentences).
+            - Provide a short overview of your experience (1-2 sentences).
+            - Optionally, if applicable, mention any problem-solving experience on platforms like LeetCode (if you have solved a significant number of problems).
+            - Close with a polite request for a referral.
+
+            The email should be short, professional, and respectful of the employee's time, while showcasing your qualifications effectively.
+
+            ### REFERRAL MESSAGE (NO PREAMBLE):
+            """
+        )
+        job_description = f"Job Title: {job['role']}, Job ID: {job.get('job_id', 'N/A')}"
+        chain_referral = prompt_referral | self.llm
+        # Ensure resume_text is passed in the input dictionary
+        res = chain_referral.invoke({"job_description": job_description, "resume_text": resume_text, "name": name})
         return res.content
